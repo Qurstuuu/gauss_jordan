@@ -4,8 +4,8 @@ using namespace std;
 
 char *INPUTFILE = "input.txt";
 
-bool to_diagonal_matrix() {
-
+bool to_diagonal_matrix(double** MATRIX, int n_of_rows, int n_of_columns) {
+	
 }
 
 int main()
@@ -18,13 +18,14 @@ int main()
     }
     else {
         fscanf(IFile, "%d %d", &rows, &columns);
+		columns++;
         Matrix = new double*[rows]; //ввод динамического массива
         for(int i=0; i<rows; i++) {
-        Matrix[i] = new double[columns+1];
+        Matrix[i] = new double[columns];
         }
     }
     for(int i=0; i<rows; i++) {
-        for(int j=0; j<columns+1; j++) {
+        for(int j=0; j<columns; j++) {
             if(feof(IFile)==0) fscanf(IFile, "%lf", &Matrix[i][j]);
         }
     }
