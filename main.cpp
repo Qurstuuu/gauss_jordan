@@ -4,6 +4,7 @@
 using namespace std;
 
 char *INPUTFILE = "input.txt";
+char *OUTPUTFILE = "output.txt";
 
 void fancy_print(double** Matrix, int rows, int columns) {
     cout << setprecision(3);
@@ -31,15 +32,16 @@ void fix_diagonal_zeros(double** MATRIX, int n_of_rows, int n_of_columns) {
 }
 
 int pivot_element(double** MATRIX, int n_of_rows, int current_row, int current_column) {
-    for(int p = current_row, pivot = current_row; p < n_of_rows; p++) { // поиск ведущего элемента
+    int pivot = current_row;
+    for(int p = current_row; p < n_of_rows; p++) { // поиск ведущего элемента
 	    if(abs(MATRIX[p][current_column]) > abs(MATRIX[pivot][current_column])) {
-	        int pivot = p;
+	        pivot = p;
 	    }
     }
     return pivot;
 }
 
-void to_diagonal_matrix(double** MATRIX, int n_of_rows, int n_of_columns) {
+/*void to_diagonal_matrix(double** MATRIX, int n_of_rows, int n_of_columns) {
 	double ratio;
 	int skipped_cols = 0;
 	for(int i=0; i<n_of_rows; i++) {
@@ -64,10 +66,9 @@ void to_diagonal_matrix(double** MATRIX, int n_of_rows, int n_of_columns) {
 		}
 	}
 }
-
-void to_identity_matrix(double** Matrix, int n_of_rows, int n_of_columns) {
-    int where[n_of_columns-1];
-    for(int current_row, current_column; (current_row < n_of_rows)&&(current_column < n_of_columns); current_row++) {
+*/
+void to_identity_matrix(double** Matrix, int n_of_rows, int n_of_columns, int* where) {
+    for(int current_row = 0, current_column = 0; (current_row < n_of_rows)and(current_column < n_of_columns); current_row++) {
         where[current_column] = -1;
         int pivot = pivot_element(Matrix, n_of_rows, current_row, current_column); // выбираем ведущий элемент
         while((Matrix[current_row][pivot] == 0)&&(current_column+1 < n_of_columns)) { // ищем в следующем столбце, если не нашли
@@ -85,14 +86,19 @@ void to_identity_matrix(double** Matrix, int n_of_rows, int n_of_columns) {
         Matrix[current_row][current_column] = 1.0; // деление первого элемента на самого себя
         for(int i = 0; i < n_of_rows; i++) { // вычитаем из всех строк, кроме ведущей, ведущую
 			if(current_row!=i) {
-				double ratio = MATRIX[i][current_column];
+				double ratio = Matrix[i][current_column];
 				for(int k = current_column; k < n_of_columns; k++) {
-					MATRIX[i][k] -= ratio * MATRIX[current_row][k];
+					Matrix[i][k] -= ratio * Matrix[current_row][k];
 				}
 			}
-		} //
+		}
+		fancy_print(Matrix, n_of_rows, n_of_columns);
         current_column++;
     }
+}
+
+void extract_unknowns(double** Matrix, int n_of_rows, int n_of_columns, int* where) {
+    
 }
 
 void unknowns_from_diagonal(double** MATRIX, int n_of_rows) {
@@ -128,9 +134,27 @@ int main()
     cout << "Input successful." << endl;
     fclose(IFile);
     fancy_print(Matrix, rows, columns);
-    to_diagonal_matrix(Matrix, rows, columns);
+    int where[columns-1]; // для to_identity_matrix
+    to_identity_matrix(Matrix, rows, columns, where);
 	fancy_print(Matrix, rows, columns);
-	unknowns_from_diagonal(Matrix, rows);
+	bool single_solution_check = true;
+	for(int i = 0; i < columns-1; i++) {
+	    if(where[i] == -1) {
+	        single_solution_check = false;
+	        break;
+	    }
+    }
+    FILE *OFile;
+    OFile = fopen(OUTPUTFILE, "w");
+	if(single_solution_check) { // нужны еще критерии
+	    for(int curr_row = 0; curr_row < columns-1; curr_row++) {
+	        fprintf(OFile, "x%d = %lf\n", curr_row, Matrix[curr_row][columns]); // не уверена насчет этого момента
+	    }
+	}
+	else {
+	    
+	}
+	fclose(OFile);
     for (int i=0; i<rows; i++) delete[] Matrix[i]; //удаление массива
     delete[] Matrix;
     return 0;
